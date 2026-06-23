@@ -355,6 +355,16 @@ kbd {
     border-color: rgba(244, 67, 54, 0.6);
 }
 
+/* ===== Minimap ===== */
+.minimap {
+    position: fixed;
+    bottom: 100px;
+    right: 16px;
+    width: 180px;
+    height: 180px;
+    z-index: 10;
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 600px) {
     #hud { gap: 8px; bottom: 110px; }
@@ -367,10 +377,12 @@ kbd {
     .key-row { font-size: 12px; }
     kbd { min-width: 28px; height: 26px; font-size: 11px; }
     .mobile-btn { width: 64px; height: 64px; font-size: 20px; }
+    .minimap { bottom: 130px; right: 8px; width: 120px; height: 120px; }
 }
 
 @media (max-width: 380px) {
     .mobile-btn { width: 56px; height: 56px; font-size: 18px; }
     .mobile-side { gap: 10px; }
     #mobile-controls { padding: 0 12px; }
+    .minimap { bottom: 120px; right: 4px; width: 100px; height: 100px; }
 }

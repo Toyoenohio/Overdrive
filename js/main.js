@@ -5,6 +5,7 @@ import { CityRoad }     from './cityRoad.js';
 import { Environment }  from './environment.js';
 import { GameCamera }   from './camera.js';
 import { UI }           from './ui.js';
+import { Minimap }      from './minimap.js';
 import { cityCurve, curveLength } from './cityMap.js';
 
 /**
@@ -37,6 +38,7 @@ class Game {
         this.cityRoad    = new CityRoad(this.scene);
         this.environment = new Environment(this.scene);
         this.gameCamera  = new GameCamera(this.renderer);
+        this.minimap     = new Minimap();
 
         /* --- State --- */
         this.isRunning  = false;
@@ -130,6 +132,9 @@ class Game {
         this.ui.updateSpeed(this.car.speed);
         this.ui.updateScore(this.car.distanceTraveled);
         this.ui.updateTimeOfDay(this.environment.getDayFactor());
+
+        // Minimap
+        this.minimap.update(carPos);
 
         // Tone-mapping
         this.renderer.toneMappingExposure = THREE.MathUtils.lerp(0.6, 1.0, dayFactor);
