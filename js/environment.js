@@ -16,7 +16,7 @@ export class Environment {
     /* ---------- Lighting ---------- */
     _setupLighting() {
         // Moonlight — dim blue-purple directional
-        this.sunLight = new THREE.DirectionalLight(0x3344aa, 0.35);
+        this.sunLight = new THREE.DirectionalLight(0x6688cc, 1.2);
         this.sunLight.position.set(40, 90, 60);
         this.sunLight.castShadow = true;
         const s = this.sunLight.shadow;
@@ -33,18 +33,18 @@ export class Environment {
         this.scene.add(this.sunLight.target);
 
         // Ambient — faint blue-violet fill
-        this.ambientLight = new THREE.AmbientLight(0x1a1040, 0.18);
+        this.ambientLight = new THREE.AmbientLight(0x2a2060, 0.55);
         this.scene.add(this.ambientLight);
 
         // Hemisphere — purple sky / dark ground
-        this.hemiLight = new THREE.HemisphereLight(0x1a0a2e, 0x050510, 0.10);
+        this.hemiLight = new THREE.HemisphereLight(0x2a1a4e, 0x101020, 0.30);
         this.scene.add(this.hemiLight);
     }
 
     /* ---------- Fog ---------- */
     _setupFog() {
-        this.scene.fog = new THREE.Fog(0x060818, 40, 300);
-        this.scene.background = new THREE.Color(0x0a0618);
+        this.scene.fog = new THREE.Fog(0x0c1028, 80, 500);
+        this.scene.background = new THREE.Color(0x10082a);
     }
 
     /* ---------- Stars ---------- */

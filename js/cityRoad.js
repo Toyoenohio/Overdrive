@@ -23,11 +23,11 @@ export class CityRoad {
     _initMaterials() {
         // Dark cyberpunk asphalt
         this.roadMat = new THREE.MeshStandardMaterial({
-            color: 0x1a1a22, flatShading: true,
-            roughness: 0.92, metalness: 0.08,
+            color: 0x2a2a35, flatShading: true,
+            roughness: 0.90, metalness: 0.08,
         });
         this.shoulderMat = new THREE.MeshStandardMaterial({
-            color: 0x2a2a3a, flatShading: true, roughness: 0.9,
+            color: 0x383848, flatShading: true, roughness: 0.9,
         });
         this.barrierMat = new THREE.MeshStandardMaterial({
             color: 0x444455, flatShading: true, roughness: 0.7, metalness: 0.3,
@@ -35,16 +35,16 @@ export class CityRoad {
         // Cyan edge markings with glow
         this.markingMat = new THREE.MeshStandardMaterial({
             color: 0x00cccc, flatShading: true,
-            emissive: 0x00aaaa, emissiveIntensity: 0.5,
+            emissive: 0x00cccc, emissiveIntensity: 1.0,
         });
         // Yellow neon center line
         this.markingYellow = new THREE.MeshStandardMaterial({
             color: 0xffcc00, flatShading: true,
-            emissive: 0xffaa00, emissiveIntensity: 0.6,
+            emissive: 0xffaa00, emissiveIntensity: 1.2,
         });
         // Dark terrain
         this.terrainMat = new THREE.MeshStandardMaterial({
-            color: 0x0a0f1a, flatShading: true, roughness: 0.95,
+            color: 0x151a2a, flatShading: true, roughness: 0.95,
         });
 
         // Light pole materials
@@ -54,7 +54,7 @@ export class CityRoad {
         this.fixtureMat = new THREE.MeshStandardMaterial({
             color: 0xffaa44,
             emissive: 0xffaa22,
-            emissiveIntensity: 1.5,
+            emissiveIntensity: 2.5,
             flatShading: true,
         });
 

@@ -29,7 +29,7 @@ class Game {
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
         this.renderer.toneMapping       = THREE.ACESFilmicToneMapping;
-        this.renderer.toneMappingExposure = 0.65;
+        this.renderer.toneMappingExposure = 1.1;
 
         /* --- Scene --- */
         this.scene = new THREE.Scene();

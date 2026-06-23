@@ -157,24 +157,26 @@ export class Car {
     }
 
     _createHeadlightBeams() {
-        this.spotL = new THREE.SpotLight(0xffffcc, 6, 120, Math.PI / 5, 0.4, 1.0);
+        this.spotL = new THREE.SpotLight(0xffeedd, 15, 200, Math.PI / 4, 0.35, 0.8);
         this.spotL.position.set(-0.7, 0.5, 2.5);
-        this.spotL.target.position.set(-0.7, -0.5, 30);
+        this.spotL.target.position.set(-0.7, -0.5, 35);
+        this.spotL.castShadow = true;
         this.group.add(this.spotL);
         this.group.add(this.spotL.target);
 
-        this.spotR = new THREE.SpotLight(0xffffcc, 6, 120, Math.PI / 5, 0.4, 1.0);
+        this.spotR = new THREE.SpotLight(0xffeedd, 15, 200, Math.PI / 4, 0.35, 0.8);
         this.spotR.position.set(0.7, 0.5, 2.5);
-        this.spotR.target.position.set(0.7, -0.5, 30);
+        this.spotR.target.position.set(0.7, -0.5, 35);
+        this.spotR.castShadow = true;
         this.group.add(this.spotR);
         this.group.add(this.spotR.target);
     }
 
     setHeadlights(intensity) {
         const i = Math.max(0, Math.min(1, intensity));
-        this.spotL.intensity = 4 + i * 4;
-        this.spotR.intensity = 4 + i * 4;
-        this.headlightMat.emissiveIntensity = 0.6 + i * 0.4;
+        this.spotL.intensity = 10 + i * 10;
+        this.spotR.intensity = 10 + i * 10;
+        this.headlightMat.emissiveIntensity = 0.8 + i * 0.5;
     }
 
     /* ========================================================
