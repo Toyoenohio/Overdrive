@@ -111,24 +111,29 @@ export class CityRoad {
         // Barriers along edges
         const barrierH = 1.2;
         const barrierW = 0.3;
-        const barrierStep = 4; // one barrier segment every 4 sample points
+        const barrierStep = 2; // one barrier segment every 2 sample points (smoother)
 
         for (const side of [-1, 1]) {
             for (let i = 0; i < points.length - barrierStep; i += barrierStep) {
                 const pt = points[i];
                 const next = points[Math.min(i + barrierStep, points.length - 1)];
-                const tan = tangents[i];
-                const perp = new THREE.Vector3(-tan.z, 0, tan.x).normalize();
+
+                // Direction from pt to next (in XZ plane)
+                const dir = new THREE.Vector3(next.x - pt.x, 0, next.z - pt.z).normalize();
+                // Perpendicular: right vector in XZ
+                const perp = new THREE.Vector3(-dir.z, 0, dir.x);
 
                 const mid = pt.clone().add(next).multiplyScalar(0.5);
-                mid.addScaledVector(perp, side * (halfSW - 0.2));
+                mid.addScaledVector(perp, side * (halfSW - 0.3));
 
                 const len = pt.distanceTo(next);
                 const barGeo = new THREE.BoxGeometry(barrierW, barrierH, len);
                 const bar = new THREE.Mesh(barGeo, this.barrierMat);
                 bar.position.copy(mid);
                 bar.position.y = barrierH / 2;
-                bar.lookAt(next.clone().setY(0));
+                // Align barrier along the segment direction
+                const angle = Math.atan2(dir.x, dir.z);
+                bar.rotation.y = angle;
                 bar.castShadow = true;
                 bar.receiveShadow = true;
                 roadGroup.add(bar);
@@ -208,7 +213,8 @@ export class CityRoad {
     getClosestPoint(pos) {
         let bestDist = Infinity;
         let bestT = 0;
-        const steps = 100;
+        // Dense sampling: 500 steps over 4626 units = ~9 units between samples
+        const steps = 500;
         for (let i = 0; i <= steps; i++) {
             const t = i / steps;
             const pt = cityCurve.getPointAt(t);
@@ -218,15 +224,27 @@ export class CityRoad {
                 bestT = t;
             }
         }
+        // Refine with a local binary search around bestT
+        let lo = Math.max(0, bestT - 0.01);
+        let hi = Math.min(1, bestT + 0.01);
+        for (let refine = 0; refine < 8; refine++) {
+            const t1 = lo + (hi - lo) / 3;
+            const t2 = hi - (hi - lo) / 3;
+            const d1 = pos.distanceToSquared(cityCurve.getPointAt(t1));
+            const d2 = pos.distanceToSquared(cityCurve.getPointAt(t2));
+            if (d1 < d2) hi = t2;
+            else lo = t1;
+        }
+        const finalT = (lo + hi) / 2;
         return {
-            t: bestT,
-            point: cityCurve.getPointAt(bestT),
-            tangent: cityCurve.getTangentAt(bestT).normalize(),
+            t: finalT,
+            point: cityCurve.getPointAt(finalT),
+            tangent: cityCurve.getTangentAt(finalT).normalize(),
         };
     }
 
     /** Check if a position is on the road (within ROAD_WIDTH/2 + margin). */
-    isOnRoad(pos, margin = 3) {
+    isOnRoad(pos, margin = 8) {
         const info = this.getClosestPoint(pos);
         const dist = pos.distanceTo(info.point);
         return dist < (ROAD_WIDTH / 2 + margin);

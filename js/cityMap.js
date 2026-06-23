@@ -70,8 +70,8 @@ export function getCurvePoint(t) {
 }
 
 // Road properties
-export const ROAD_WIDTH = 12;        // game units
-export const SHOULDER_WIDTH = 2;
+export const ROAD_WIDTH = 28;        // game units (~3.5 real meters, 2 lanes)
+export const SHOULDER_WIDTH = 5;
 export const LANE_COUNT = 2;         // one each direction
 export const LANE_WIDTH = ROAD_WIDTH / (LANE_COUNT * 2); // per half-lane
 
