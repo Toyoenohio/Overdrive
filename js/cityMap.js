@@ -76,9 +76,9 @@ export function getCurvePoint(t) {
     return { point: pt, tangent };
 }
 
-// Road properties
-export const ROAD_WIDTH = 28;        // game units (~4 real meters per side, 2 lanes)
-export const SHOULDER_WIDTH = 5;
+// Road properties (SCALE 1.0 = 1 unit = 1 meter)
+export const ROAD_WIDTH = 14;        // 2-lane road ~7m per side
+export const SHOULDER_WIDTH = 3;
 export const LANE_COUNT = 2;         // one each direction
 export const LANE_WIDTH = ROAD_WIDTH / (LANE_COUNT * 2); // per half-lane
 

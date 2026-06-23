@@ -10,16 +10,16 @@ import { cityCurve, waypoints3D } from './cityMap.js';
 // sideOffset: positive = right of road, negative = left
 const LANDMARKS = [
     // waypoint, side,  color,      w,    d,   h,   label
-    [ 2,   8,  0xd4a574,  8,   6,   4.0, 'CC Plaza Mayor'     ], // beige, near start
-    [ 2,  -6,  0xcc0000,  5,   5,   3.5, "McDonald's"         ], // red
-    [ 5,   7,  0x4488cc,  6,   4,   4.5, 'Farmatodo'          ], // blue roof
-    [ 7,  10,  0x888888, 12,  10,   5.0, 'C.C. Aventura Plaza' ], // gray, big
-    [ 7,  -8,  0xff8844,  5,   5,   3.0, 'Verdader Sabor'     ], // orange
-    [ 12,  6,  0x996633,  5,   4,   3.0, 'La Bodeguilla'      ], // brown
-    [ 14, -7,  0xcc4444,  6,   5,   4.0, 'Bella China'        ], // red/restaurant
-    [ 16,  8,  0x66aa66,  7,   5,   3.5, 'Av. Tamanaco'       ], // green
-    [ 17, -6,  0xeeeecc, 10,   8,   5.5, 'U.E. Garmendia'     ], // cream, school
-    [ 18,  5,  0xcc8844,  6,   6,   3.0, 'Tasca El Moroco'    ], // terra cotta
+    [ 2,  20,  0xd4a574,  8,   6,   4.0, 'CC Plaza Mayor'     ],
+    [ 2, -18,  0xcc0000,  5,   5,   3.5, "McDonald's"         ],
+    [ 5,  18,  0x4488cc,  6,   4,   4.5, 'Farmatodo'          ],
+    [ 7,  22,  0x888888, 12,  10,   5.0, 'C.C. Aventura Plaza' ],
+    [ 7, -20,  0xff8844,  5,   5,   3.0, 'Verdader Sabor'     ],
+    [ 12, 16,  0x996633,  5,   4,   3.0, 'La Bodeguilla'      ],
+    [ 14,-18,  0xcc4444,  6,   5,   4.0, 'Bella China'        ],
+    [ 16, 18,  0x66aa66,  7,   5,   3.5, 'Av. Tamanaco'       ],
+    [ 17,-20,  0xeeeecc, 10,   8,   5.5, 'U.E. Garmendia'     ],
+    [ 18, 16,  0xcc8844,  6,   6,   3.0, 'Tasca El Moroco'    ],
 ];
 
 export class Buildings {
@@ -111,7 +111,7 @@ export class Buildings {
             const perp = new THREE.Vector3(-tangent.z, 0, tangent.x);
 
             const side = (i % 2 === 0) ? 1 : -1;
-            const offset = 5 + Math.random() * 12;
+            const offset = 12 + Math.random() * 20;
             const pos = pt.clone().addScaledVector(perp, side * offset);
 
             const w = 3 + Math.random() * 6;
