@@ -1,13 +1,14 @@
 import * as THREE from 'three';
 import { InputManager } from './input.js';
 import { Car }          from './car.js';
-import { RoadManager }  from './road.js';
+import { CityRoad }     from './cityRoad.js';
 import { Environment }  from './environment.js';
 import { GameCamera }   from './camera.js';
 import { UI }           from './ui.js';
+import { cityCurve, curveLength } from './cityMap.js';
 
 /**
- * Game — main loop, module coordination, scenic driving experience.
+ * Game — Lechería city driving.
  */
 class Game {
     constructor() {
@@ -31,9 +32,9 @@ class Game {
         /* --- Scene --- */
         this.scene = new THREE.Scene();
 
-        /* --- Modules --- */
+        /* --- City modules --- */
         this.car         = new Car(this.scene);
-        this.road        = new RoadManager(this.scene);
+        this.cityRoad    = new CityRoad(this.scene);
         this.environment = new Environment(this.scene);
         this.gameCamera  = new GameCamera(this.renderer);
 
@@ -42,13 +43,19 @@ class Game {
         this.isGameOver = false;
         this.clock      = new THREE.Clock(false);
 
+        /* --- Place car at start of road --- */
+        const startPoint = cityCurve.getPointAt(0);
+        const startTangent = cityCurve.getTangentAt(0).normalize();
+        const startAngle = Math.atan2(startTangent.x, startTangent.z);
+        this.car.group.position.copy(startPoint);
+        this.car.group.rotation.y = startAngle;
+
         /* --- UI wiring --- */
         this.ui.onStart(()   => this.start());
         this.ui.onRestart(() => this.restart());
 
-        /* --- Initial scene render --- */
-        this.road.update(0, 0, 1);
-        this.gameCamera.reset(this.car.getPosition());
+        /* --- Initial render --- */
+        this.gameCamera.reset(this.car.getPosition(), this.car.group.quaternion);
         this.renderer.render(this.scene, this.gameCamera.getCamera());
 
         /* --- Start loop --- */
@@ -67,10 +74,13 @@ class Game {
 
     restart() {
         this.car.reset();
-        this.road.reset();
+        const startPoint = cityCurve.getPointAt(0);
+        const startTangent = cityCurve.getTangentAt(0).normalize();
+        const startAngle = Math.atan2(startTangent.x, startTangent.z);
+        this.car.group.position.copy(startPoint);
+        this.car.group.rotation.y = startAngle;
+        this.gameCamera.reset(this.car.getPosition(), this.car.group.quaternion);
         this.environment.reset();
-        this.road.update(0, 0, 1);
-        this.gameCamera.reset(this.car.getPosition());
         this.ui.hideGameOver();
         this.start();
     }
@@ -87,7 +97,6 @@ class Game {
     _animate() {
         requestAnimationFrame(() => this._animate());
 
-        // Still render even when not running (so start screen shows 3D scene)
         if (!this.isRunning || this.isGameOver) {
             this.renderer.render(this.scene, this.gameCamera.getCamera());
             return;
@@ -95,33 +104,35 @@ class Game {
 
         const dt = Math.min(this.clock.getDelta(), 0.05);
 
-        // Update car
+        // Poll gamepad
+        this.input.update();
+
+        // Update car (free 2D movement)
         this.car.update(dt, this.input);
 
         const carPos = this.car.getPosition();
-        const carZ   = carPos.z;
 
-        // Update world
+        // Day/night
         const dayFactor = this.environment.getDayFactor();
-        this.road.update(carZ, dt, dayFactor);
-        this.environment.update(dt, carZ);
+        this.environment.update(dt, carPos.z);
+        this.car.setHeadlights(1 - dayFactor);
 
-        // Headlights react to day/night
-        const nightFactor = 1 - dayFactor;
-        this.car.setHeadlights(nightFactor);
+        // Off-road detection: game over if car leaves the road
+        if (!this.cityRoad.isOnRoad(carPos)) {
+            this.gameOver();
+            return;
+        }
 
-        // Camera
-        this.gameCamera.update(dt, carPos, this.car.speed, this.car.group.rotation.y);
+        // Camera follows behind the car
+        this.gameCamera.update(dt, carPos, this.car.speed, this.car.group.quaternion);
 
         // HUD
         this.ui.updateSpeed(this.car.speed);
         this.ui.updateScore(this.car.distanceTraveled);
         this.ui.updateTimeOfDay(this.environment.getDayFactor());
 
-        // No collision — this is a scenic cruise experience!
-
-        // Tone-mapping exposure dims slightly at night
-        this.renderer.toneMappingExposure = THREE.MathUtils.lerp(0.6, 1.0, this.environment.getDayFactor());
+        // Tone-mapping
+        this.renderer.toneMappingExposure = THREE.MathUtils.lerp(0.6, 1.0, dayFactor);
 
         // Render
         this.renderer.render(this.scene, this.gameCamera.getCamera());
@@ -130,3 +141,4 @@ class Game {
 
 /* ===== Bootstrap ===== */
 const game = new Game();
+window.game = game; // debugging

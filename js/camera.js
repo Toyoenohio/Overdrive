@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 
 /**
- * GameCamera — smooth third-person follow camera with speed-based FOV.
+ * GameCamera — smooth third-person follow camera.
+ * Follows behind the car based on its actual rotation.
  */
 export class GameCamera {
     constructor(renderer) {
@@ -12,11 +13,10 @@ export class GameCamera {
             1200
         );
 
-        // Offsets relative to car
-        this.offsetY     = 5.0;
-        this.offsetZ     = -11.0;   // behind the car (negative Z)
-        this.lookAheadY  = 1.2;
-        this.lookAheadZ  = 12.0;    // look ahead (positive Z)
+        // Offsets relative to car (in car-local space)
+        this.offsetBack   = -12.0;  // behind the car
+        this.offsetUp     = 5.0;    // above
+        this.lookAhead    = 12.0;   // look ahead of car
 
         // Smoothing
         this.posDamping    = 4.0;
@@ -39,27 +39,32 @@ export class GameCamera {
         window.addEventListener('resize', this._onResize);
     }
 
-    /* ---------- Update (every frame) ---------- */
-    update(dt, carPos, carSpeed, carRotY) {
-        // FOV → increases with speed
-        const speedRatio = carSpeed / 80;
+    /**
+     * @param {THREE.Vector3} carPos  - world position of the car
+     * @param {number} carSpeed        - km/h
+     * @param {THREE.Quaternion} carQuat - car's world rotation
+     */
+    update(dt, carPos, carSpeed, carQuat) {
+        // FOV increases with speed
+        const speedRatio = Math.min(Math.abs(carSpeed) / 120, 1);
         const targetFOV  = this.baseFOV + (this.maxFOV - this.baseFOV) * speedRatio;
         this.camera.fov  = THREE.MathUtils.lerp(this.camera.fov, targetFOV, dt * 3);
         this.camera.updateProjectionMatrix();
 
-        // Lateral offset follows car rotation (steering)
-        const lateralOff = carRotY * 4;
+        // Compute "behind" and "ahead" offsets in world space
+        const behind = new THREE.Vector3(0, 0, this.offsetBack).applyQuaternion(carQuat);
+        const ahead  = new THREE.Vector3(0, 0, this.lookAhead).applyQuaternion(carQuat);
 
         const targetPos = new THREE.Vector3(
-            carPos.x + lateralOff,
-            carPos.y + this.offsetY,
-            carPos.z + this.offsetZ
+            carPos.x + behind.x,
+            carPos.y + this.offsetUp,
+            carPos.z + behind.z,
         );
 
         const targetLook = new THREE.Vector3(
-            carPos.x,
-            carPos.y + this.lookAheadY,
-            carPos.z + this.lookAheadZ
+            carPos.x + ahead.x,
+            carPos.y + 1.2,
+            carPos.z + ahead.z,
         );
 
         // Smooth interpolation
@@ -72,18 +77,32 @@ export class GameCamera {
 
     getCamera() { return this.camera; }
 
-    /** Snap camera to initial position (no lerp). */
-    reset(carPos) {
-        this._pos.set(
-            carPos.x,
-            carPos.y + this.offsetY,
-            carPos.z + this.offsetZ
-        );
-        this._lookAt.set(
-            carPos.x,
-            carPos.y + this.lookAheadY,
-            carPos.z + this.lookAheadZ
-        );
+    reset(carPos, carQuat = null) {
+        if (carQuat) {
+            const behind = new THREE.Vector3(0, 0, this.offsetBack).applyQuaternion(carQuat);
+            const ahead  = new THREE.Vector3(0, 0, this.lookAhead).applyQuaternion(carQuat);
+            this._pos.set(
+                carPos.x + behind.x,
+                carPos.y + this.offsetUp,
+                carPos.z + behind.z,
+            );
+            this._lookAt.set(
+                carPos.x + ahead.x,
+                carPos.y + 1.2,
+                carPos.z + ahead.z,
+            );
+        } else {
+            this._pos.set(
+                carPos.x,
+                carPos.y + this.offsetUp,
+                carPos.z + this.offsetBack,
+            );
+            this._lookAt.set(
+                carPos.x,
+                carPos.y + 1.2,
+                carPos.z + this.lookAhead,
+            );
+        }
         this.camera.position.copy(this._pos);
         this.camera.lookAt(this._lookAt);
         this.camera.fov = this.baseFOV;

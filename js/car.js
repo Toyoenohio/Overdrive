@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 
 /**
- * Car — low-poly vehicle model with arcade-style physics.
+ * Car — low-poly vehicle model with free 2D arcade physics.
+ * Moves in the direction it faces. Steering rotates the car.
  */
 export class Car {
     constructor(scene) {
@@ -10,12 +11,12 @@ export class Car {
 
         /* --- Physics --- */
         this.speed          = 0;     // km/h
-        this.maxSpeed        = 80;
-        this.acceleration    = 30;   // km/h per second
-        this.brakeForce      = 50;
-        this.naturalDecel    = 18;
-        this.lateralSpeed    = 0;
-        this.maxLateralSpeed = 14;
+        this.maxSpeed        = 120;
+        this.acceleration    = 35;   // km/h per second
+        this.brakeForce      = 55;
+        this.naturalDecel    = 20;
+        this.steerSpeed      = 2.2;  // radians per second at full lock
+        this.maxSteerAngle   = 0.55; // ~31° max steering angle
 
         /* --- State --- */
         this.distanceTraveled = 0;
@@ -27,7 +28,7 @@ export class Car {
     }
 
     /* ========================================================
-     *  MODEL
+     *  MODEL (unchanged from original)
      * ====================================================== */
     _buildModel() {
         const bodyColor = 0xe63946;
@@ -35,19 +36,16 @@ export class Car {
             color: bodyColor, flatShading: true, metalness: 0.4, roughness: 0.6
         });
 
-        // Lower body
         const lower = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.55, 4.8), bodyMat);
         lower.position.y = 0.38;
         lower.castShadow = true;
         this.group.add(lower);
 
-        // Upper body
         const upper = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.35, 4.4), bodyMat);
         upper.position.y = 0.88;
         upper.castShadow = true;
         this.group.add(upper);
 
-        // Cabin / glass
         const glassMat = new THREE.MeshStandardMaterial({
             color: 0x1a759f, flatShading: true,
             metalness: 0.8, roughness: 0.2, transparent: true, opacity: 0.65
@@ -57,7 +55,6 @@ export class Car {
         cabin.castShadow = true;
         this.group.add(cabin);
 
-        // Roof ridge
         const roofMat = new THREE.MeshStandardMaterial({
             color: 0xc1121f, flatShading: true, metalness: 0.35, roughness: 0.65
         });
@@ -65,7 +62,6 @@ export class Car {
         roof.position.set(0, 1.68, -0.3);
         this.group.add(roof);
 
-        // Wheels
         const wheelMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, flatShading: true, roughness: 0.95 });
         const rimMat   = new THREE.MeshStandardMaterial({ color: 0x888888, flatShading: true, metalness: 0.8 });
         const wheelGeo = new THREE.CylinderGeometry(0.34, 0.34, 0.24, 8);
@@ -73,10 +69,8 @@ export class Car {
 
         this.wheels = [];
         const wp = [
-            [-1.15, 0.34, 1.45],
-            [ 1.15, 0.34, 1.45],
-            [-1.15, 0.34,-1.45],
-            [ 1.15, 0.34,-1.45],
+            [-1.15, 0.34, 1.45], [1.15, 0.34, 1.45],
+            [-1.15, 0.34,-1.45], [1.15, 0.34,-1.45],
         ];
         for (const p of wp) {
             const g = new THREE.Group();
@@ -92,7 +86,6 @@ export class Car {
             this.group.add(g);
         }
 
-        // Headlights
         this.headlightMat = new THREE.MeshStandardMaterial({
             color: 0xffee88, emissive: 0xffdd57, emissiveIntensity: 0.3, flatShading: true
         });
@@ -103,7 +96,6 @@ export class Car {
             this.group.add(hl);
         }
 
-        // Taillights
         this.taillightMat = new THREE.MeshStandardMaterial({
             color: 0xff0000, emissive: 0xff2222, emissiveIntensity: 0.5, flatShading: true
         });
@@ -114,7 +106,6 @@ export class Car {
             this.group.add(tl);
         }
 
-        // Bumpers
         const bMat = new THREE.MeshStandardMaterial({ color: 0x222222, flatShading: true, metalness: 0.3 });
         const fBump = new THREE.Mesh(new THREE.BoxGeometry(2.3, 0.28, 0.25), bMat);
         fBump.position.set(0, 0.24, 2.38);
@@ -124,9 +115,6 @@ export class Car {
         this.group.add(rBump);
     }
 
-    /* ========================================================
-     *  HEADLIGHT BEAMS (SpotLights)
-     * ====================================================== */
     _createHeadlightBeams() {
         this.spotL = new THREE.SpotLight(0xffffcc, 0, 60, Math.PI / 7, 0.6, 1.2);
         this.spotL.position.set(-0.7, 0.5, 2.5);
@@ -141,7 +129,6 @@ export class Car {
         this.group.add(this.spotR.target);
     }
 
-    /** Set headlight intensity (0 = off, 1 = full). */
     setHeadlights(intensity) {
         const i = Math.max(0, Math.min(1, intensity));
         this.spotL.intensity = i * 4;
@@ -150,40 +137,47 @@ export class Car {
     }
 
     /* ========================================================
-     *  UPDATE (called every frame)
+     *  UPDATE — free 2D movement
      * ====================================================== */
     update(dt, input) {
-        // Throttle
-        if (input.throttle) this.speed += this.acceleration * dt;
-        // Brake
-        if (input.brake)    this.speed -= this.brakeForce * dt;
-        // Handbrake
-        if (input.handbrake) this.speed *= (1 - 3.5 * dt);
-        // Natural decel
-        if (!input.throttle && !input.brake && !input.handbrake) {
+        // Input polling
+        const throttle = input.throttle;
+        const brake = input.brake;
+        const steerLeft = input.steerLeft;
+        const steerRight = input.steerRight;
+        const steer = steerRight - steerLeft; // -1..1
+
+        // Acceleration / braking
+        if (throttle) {
+            this.speed += this.acceleration * throttle * dt;
+        }
+        if (brake) {
+            this.speed -= this.brakeForce * brake * dt;
+        }
+        if (input.handbrake) {
+            this.speed *= (1 - 3.5 * dt);
+        }
+        if (!throttle && !brake && !input.handbrake) {
             this.speed = Math.max(0, this.speed - this.naturalDecel * dt);
         }
-        this.speed = THREE.MathUtils.clamp(this.speed, 0, this.maxSpeed);
+        this.speed = THREE.MathUtils.clamp(this.speed, -15, this.maxSpeed);
 
         const speedMs = this.speed / 3.6;
 
-        // Lateral steering
-        const steer = input.steerLeft - input.steerRight;
-        const target = steer * this.maxLateralSpeed * (this.speed / this.maxSpeed);
-        this.lateralSpeed = THREE.MathUtils.lerp(this.lateralSpeed, target, dt * 8);
+        // Steering rotates the car (speed-dependent)
+        if (Math.abs(steer) > 0.01 && Math.abs(this.speed) > 0.5) {
+            const steerAmount = steer * this.steerSpeed * dt;
+            this.group.rotation.y += steerAmount;
+        }
 
-        // Move
-        this.group.position.z += speedMs * dt;
-        this.group.position.x += this.lateralSpeed * dt;
+        // Move forward in the direction the car faces
+        const forward = new THREE.Vector3(0, 0, 1).applyQuaternion(this.group.quaternion);
+        this.group.position.x += forward.x * speedMs * dt;
+        this.group.position.z += forward.z * speedMs * dt;
 
-        // Clamp to road
-        this.group.position.x = THREE.MathUtils.clamp(this.group.position.x, -6.5, 6.5);
-
-        // Visual tilt
-        const tiltY = -steer * 0.15 * (this.speed / this.maxSpeed);
-        this.group.rotation.y = THREE.MathUtils.lerp(this.group.rotation.y, tiltY, dt * 5);
-        const tiltZ = steer * 0.045;
-        this.group.rotation.z = THREE.MathUtils.lerp(this.group.rotation.z, tiltZ, dt * 4);
+        // Visual body tilt when steering
+        const tiltZ = -steer * 0.06 * Math.min(Math.abs(this.speed) / 30, 1);
+        this.group.rotation.z = THREE.MathUtils.lerp(this.group.rotation.z, tiltZ, dt * 5);
 
         // Wheel spin
         const spin = speedMs * dt * 2.5;
@@ -192,27 +186,17 @@ export class Car {
             w.children[1].rotation.x += spin;
         }
 
-        // Brake lights intensity
-        const braking = input.brake || input.handbrake;
+        // Brake lights
+        const braking = brake || input.handbrake;
         this.taillightMat.emissiveIntensity = braking ? 1.0 : 0.4;
 
-        this.distanceTraveled += speedMs * dt;
+        this.distanceTraveled += Math.abs(speedMs) * dt;
     }
 
     getPosition() { return this.group.position; }
 
-    getBoundingBox() {
-        return {
-            x: this.group.position.x,
-            z: this.group.position.z,
-            width: 2.0,
-            length: 4.5,
-        };
-    }
-
     reset() {
         this.speed = 0;
-        this.lateralSpeed = 0;
         this.distanceTraveled = 0;
         this.group.position.set(0, 0, 0);
         this.group.rotation.set(0, 0, 0);

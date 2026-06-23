@@ -1,10 +1,15 @@
 /**
- * InputManager — keyboard + mobile touch controls.
+ * InputManager — keyboard + gamepad + mobile touch controls.
+ *
+ * Run `update()` once per frame to poll the gamepad state.
  */
 export class InputManager {
     constructor() {
         this.keys  = {};
         this.touch = { throttle: 0, brake: 0, steerLeft: 0, steerRight: 0 };
+        this.gamepad = null;         // active gamepad reference
+        this.gamepadConnected = false;
+        this._prevGamepadButtons = [];
 
         /* ---- Keyboard ---- */
         window.addEventListener('keydown', (e) => {
@@ -15,6 +20,18 @@ export class InputManager {
             this.keys[e.code] = false;
         });
         window.addEventListener('blur', () => { this.keys = {}; });
+
+        /* ---- Gamepad ---- */
+        window.addEventListener('gamepadconnected', (e) => {
+            this.gamepad = e.gamepad;
+            this.gamepadConnected = true;
+            console.log(`[input] Gamepad connected: ${e.gamepad.id}`);
+        });
+        window.addEventListener('gamepaddisconnected', () => {
+            this.gamepad = null;
+            this.gamepadConnected = false;
+            console.log('[input] Gamepad disconnected');
+        });
 
         /* ---- Touch (deferred until DOM ready) ---- */
         if (document.readyState === 'loading') {
@@ -43,7 +60,6 @@ export class InputManager {
             const el = document.getElementById(id);
             if (!el) continue;
 
-            // Touch events
             el.addEventListener('touchstart', (e) => {
                 e.preventDefault();
                 this.touch[action] = 1;
@@ -61,7 +77,6 @@ export class InputManager {
                 el.classList.remove('active');
             });
 
-            // Mouse fallback (for desktop testing)
             el.addEventListener('mousedown', (e) => {
                 e.preventDefault();
                 this.touch[action] = 1;
@@ -78,20 +93,84 @@ export class InputManager {
         }
     }
 
-    /* ---- Getters (keyboard OR touch) ---- */
+    /**
+     * Call once per frame to poll gamepad state.
+     * The Gamepad API requires polling — no events for button/axis changes.
+     */
+    update() {
+        const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+        this.gamepad = null;
+        for (const gp of gamepads) {
+            if (gp && gp.connected) {
+                this.gamepad = gp;
+                this.gamepadConnected = true;
+                break;
+            }
+        }
+        if (!this.gamepad) {
+            this.gamepadConnected = false;
+        }
+    }
+
+    /* ---- Getters (priority: keyboard > gamepad > touch) ---- */
+
     get throttle() {
-        return (this.keys['KeyW'] || this.keys['ArrowUp'] || this.touch.throttle) ? 1 : 0;
+        if (this.keys['KeyW'] || this.keys['ArrowUp']) return 1;
+        if (this.touch.throttle) return 1;
+        // Gamepad: right trigger (axis 5 on standard mapping, or button 7 for RT)
+        if (this.gamepad) {
+            const rt = this.gamepad.buttons[7]?.value ?? 0; // RT on Xbox/standard
+            const r2Axis = this.gamepad.axes[5]; // alternate
+            if (rt > 0.1) return rt;
+            if (r2Axis > 0.1) return (r2Axis + 1) / 2; // axis -1..1 → 0..1
+        }
+        return 0;
     }
+
     get brake() {
-        return (this.keys['KeyS'] || this.keys['ArrowDown'] || this.touch.brake) ? 1 : 0;
+        if (this.keys['KeyS'] || this.keys['ArrowDown']) return 1;
+        if (this.touch.brake) return 1;
+        // Gamepad: left trigger (button 6 on standard mapping)
+        if (this.gamepad) {
+            const lt = this.gamepad.buttons[6]?.value ?? 0;
+            const l2Axis = this.gamepad.axes[4];
+            if (lt > 0.1) return lt;
+            if (l2Axis > 0.1) return (l2Axis + 1) / 2;
+        }
+        return 0;
     }
+
     get steerLeft() {
-        return (this.keys['KeyA'] || this.keys['ArrowLeft'] || this.touch.steerLeft) ? 1 : 0;
+        if (this.keys['KeyA'] || this.keys['ArrowLeft']) return 1;
+        if (this.touch.steerLeft) return 1;
+        // Gamepad: left stick X (axis 0) < -0.2
+        if (this.gamepad && this.gamepad.axes[0] < -0.2) {
+            return Math.abs(this.gamepad.axes[0]);
+        }
+        // D-pad left
+        if (this.gamepad && this.gamepad.buttons[14]?.pressed) return 1;
+        return 0;
     }
+
     get steerRight() {
-        return (this.keys['KeyD'] || this.keys['ArrowRight'] || this.touch.steerRight) ? 1 : 0;
+        if (this.keys['KeyD'] || this.keys['ArrowRight']) return 1;
+        if (this.touch.steerRight) return 1;
+        // Gamepad: left stick X (axis 0) > 0.2
+        if (this.gamepad && this.gamepad.axes[0] > 0.2) {
+            return this.gamepad.axes[0];
+        }
+        // D-pad right
+        if (this.gamepad && this.gamepad.buttons[15]?.pressed) return 1;
+        return 0;
     }
+
     get handbrake() {
-        return this.keys['Space'] ? 1 : 0;
+        if (this.keys['Space']) return 1;
+        // Gamepad: A button (button 0) or X (button 2)
+        if (this.gamepad) {
+            if (this.gamepad.buttons[0]?.pressed) return 1; // A / Cross
+            if (this.gamepad.buttons[2]?.pressed) return 1; // X / Square
+        }
+        return 0;
     }
 }
