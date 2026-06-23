@@ -10,7 +10,7 @@ import { Buildings }    from './buildings.js';
 import { cityCurve, curveLength } from './cityMap.js';
 
 /**
- * Game — Lechería city driving.
+ * Game — Lechería cyberpunk night driving.
  */
 class Game {
     constructor() {
@@ -29,7 +29,7 @@ class Game {
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type    = THREE.PCFSoftShadowMap;
         this.renderer.toneMapping       = THREE.ACESFilmicToneMapping;
-        this.renderer.toneMappingExposure = 1.0;
+        this.renderer.toneMappingExposure = 0.65;
 
         /* --- Scene --- */
         this.scene = new THREE.Scene();
@@ -116,12 +116,11 @@ class Game {
 
         const carPos = this.car.getPosition();
 
-        // Day/night
-        const dayFactor = this.environment.getDayFactor();
+        // Day/night — always night
         this.environment.update(dt, carPos.z);
-        this.car.setHeadlights(1 - dayFactor);
+        this.car.setHeadlights(1);   // always full headlights
 
-        // Off-road detection: game over if car leaves the road
+        // Off-road detection
         if (!this.cityRoad.isOnRoad(carPos)) {
             this.gameOver();
             return;
@@ -133,13 +132,10 @@ class Game {
         // HUD
         this.ui.updateSpeed(this.car.speed);
         this.ui.updateScore(this.car.distanceTraveled);
-        this.ui.updateTimeOfDay(this.environment.getDayFactor());
+        this.ui.updateRPM(this.car.speed);
 
         // Minimap
         this.minimap.update(carPos);
-
-        // Tone-mapping
-        this.renderer.toneMappingExposure = THREE.MathUtils.lerp(0.6, 1.0, dayFactor);
 
         // Render
         this.renderer.render(this.scene, this.gameCamera.getCamera());

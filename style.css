@@ -8,7 +8,7 @@
 body {
     overflow: hidden;
     background: #000;
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Orbitron', 'Share Tech Mono', monospace;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
@@ -30,99 +30,222 @@ body {
     height: 100%;
 }
 
-/* ===== HUD ===== */
+/* ===== CYBERPUNK HUD DASHBOARD ===== */
 #hud {
     position: fixed;
-    bottom: 24px;
+    bottom: 0;
     left: 50%;
     transform: translateX(-50%);
-    display: flex;
-    gap: 14px;
     z-index: 10;
     pointer-events: none;
     animation: hudSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes hudSlideIn {
-    from { opacity: 0; transform: translateX(-50%) translateY(30px); }
+    from { opacity: 0; transform: translateX(-50%) translateY(40px); }
     to   { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
-#hud > div {
-    background: rgba(8, 8, 24, 0.55);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    border-radius: 18px;
-    padding: 14px 22px;
-    color: #fff;
-    text-align: center;
-    min-width: 90px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+.hud-dashboard {
+    display: flex;
+    gap: 2px;
+    padding: 6px 8px 10px;
+    background: rgba(0, 0, 0, 0.85);
+    border: 1px solid rgba(255, 50, 50, 0.25);
+    border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    box-shadow:
+        0 0 20px rgba(255, 50, 50, 0.08),
+        inset 0 0 30px rgba(0, 0, 0, 0.5);
+    position: relative;
+    overflow: hidden;
 }
 
-/* Speed */
-#speed-display { min-width: 120px; }
+/* CRT scanline overlay */
+.hud-dashboard::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.12) 2px,
+        rgba(0, 0, 0, 0.12) 4px
+    );
+    pointer-events: none;
+    z-index: 1;
+}
+
+.hud-panel {
+    background: rgba(8, 4, 4, 0.7);
+    border: 1px solid rgba(255, 60, 30, 0.18);
+    border-radius: 4px;
+    padding: 6px 10px 8px;
+    min-width: 130px;
+    position: relative;
+}
+
+.hud-panel-main {
+    min-width: 160px;
+}
+
+.panel-header {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 2px;
+    color: rgba(255, 100, 60, 0.55);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    border-bottom: 1px solid rgba(255, 60, 30, 0.12);
+    padding-bottom: 3px;
+}
+
+.panel-body {
+    font-family: 'Share Tech Mono', monospace;
+    color: #ff4422;
+}
+
+/* ---- Speed Panel ---- */
+.speed-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 58px;
+}
 
 #speed-value {
-    display: block;
-    font-size: 52px;
+    font-family: 'Orbitron', monospace;
+    font-size: 48px;
     font-weight: 900;
     line-height: 1;
-    background: linear-gradient(135deg, #ff6b6b, #feca57);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    transition: font-size 0.15s ease;
+    color: #ff3322;
+    text-shadow:
+        0 0 12px rgba(255, 50, 30, 0.6),
+        0 0 30px rgba(255, 50, 30, 0.2);
+    transition: text-shadow 0.15s;
 }
 
 #speed-unit {
-    display: block;
-    font-size: 11px;
-    font-weight: 300;
-    opacity: 0.5;
-    text-transform: uppercase;
-    letter-spacing: 3px;
-    margin-top: 4px;
-}
-
-/* Score */
-#score-display {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-#score-label {
-    display: block;
+    font-family: 'Share Tech Mono', monospace;
     font-size: 10px;
-    font-weight: 300;
-    opacity: 0.45;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-}
-
-#score-value {
-    display: block;
-    font-size: 22px;
-    font-weight: 700;
+    color: rgba(255, 100, 60, 0.5);
+    letter-spacing: 3px;
     margin-top: 2px;
 }
 
-/* Time of day */
-#time-display {
+/* ---- Vitals Panel ---- */
+.vital-row {
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: space-between;
+    gap: 6px;
+    margin-bottom: 3px;
 }
 
-#time-icon { font-size: 20px; }
+.vital-label {
+    font-size: 8px;
+    color: rgba(255, 100, 60, 0.5);
+    letter-spacing: 1px;
+    white-space: nowrap;
+}
+
+.vital-bar-track {
+    flex: 1;
+    height: 6px;
+    background: rgba(255, 50, 30, 0.1);
+    border: 1px solid rgba(255, 60, 30, 0.2);
+    border-radius: 1px;
+    overflow: hidden;
+}
+
+.vital-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff2200, #ff6622);
+    box-shadow: 0 0 6px rgba(255, 50, 20, 0.4);
+}
+
+.vital-value {
+    font-size: 10px;
+    color: #ff5533;
+}
+
+.vital-divider {
+    height: 1px;
+    background: rgba(255, 60, 30, 0.12);
+    margin: 4px 0;
+}
+
+/* ---- Tacho Panel ---- */
+.tacho-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 58px;
+}
+
+#gear-display {
+    font-family: 'Orbitron', monospace;
+    font-size: 32px;
+    font-weight: 700;
+    color: #ff3322;
+    text-shadow: 0 0 10px rgba(255, 50, 30, 0.5);
+}
+
+.rpm-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 2px;
+}
+
+#rpm-value {
+    font-size: 14px;
+    color: #ff5533;
+}
+
+.rpm-unit {
+    font-size: 7px;
+    color: rgba(255, 100, 60, 0.4);
+    letter-spacing: 1px;
+}
+
+/* ---- Navigation Panel ---- */
+.nav-body {
+    min-height: 58px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+}
+
+.nav-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.nav-label {
+    font-size: 8px;
+    color: rgba(255, 100, 60, 0.45);
+    letter-spacing: 1px;
+}
+
+#score-value, #odo-value {
+    font-size: 11px;
+    color: #ff5533;
+}
+
+.nav-clock {
+    font-size: 14px;
+    color: #ff3322;
+    text-shadow: 0 0 8px rgba(255, 50, 30, 0.4);
+}
 
 #time-label {
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    opacity: 0.85;
+    font-size: 14px;
 }
 
 /* ===== START SCREEN ===== */
@@ -132,7 +255,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: radial-gradient(ellipse at 50% 40%, rgba(20, 0, 40, 0.75) 0%, rgba(0, 0, 0, 0.92) 100%);
+    background: radial-gradient(ellipse at 50% 40%, rgba(20, 0, 50, 0.8) 0%, rgba(0, 0, 0, 0.95) 100%);
     z-index: 100;
     animation: fadeIn 0.5s ease;
 }
@@ -148,16 +271,18 @@ body {
 }
 
 .start-content h1 {
-    font-size: clamp(48px, 12vw, 100px);
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(40px, 11vw, 90px);
     font-weight: 900;
-    letter-spacing: 14px;
-    background: linear-gradient(135deg, #e63946, #ff6b6b, #feca57, #ff6b6b);
+    letter-spacing: 12px;
+    background: linear-gradient(135deg, #ff00ff, #00ffff, #ff00ff);
     background-size: 300% 100%;
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     animation: titleShimmer 4s ease-in-out infinite;
-    filter: drop-shadow(0 0 40px rgba(230, 57, 70, 0.25));
+    filter: drop-shadow(0 0 30px rgba(255, 0, 255, 0.3))
+            drop-shadow(0 0 60px rgba(0, 255, 255, 0.15));
 }
 
 @keyframes titleShimmer {
@@ -167,19 +292,20 @@ body {
 }
 
 .subtitle {
-    font-size: clamp(12px, 2.5vw, 18px);
-    font-weight: 300;
-    letter-spacing: 8px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: clamp(11px, 2.5vw, 16px);
+    font-weight: 400;
+    letter-spacing: 10px;
     text-transform: uppercase;
-    opacity: 0.5;
-    margin-top: 6px;
+    color: rgba(0, 255, 255, 0.45);
+    margin-top: 8px;
 }
 
 .controls-info {
-    margin-top: 44px;
+    margin-top: 40px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     align-items: center;
 }
 
@@ -187,8 +313,10 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
-    font-size: 14px;
-    opacity: 0.75;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    opacity: 0.65;
+    color: rgba(255, 255, 255, 0.8);
 }
 
 .key-row span {
@@ -196,49 +324,59 @@ body {
     text-align: left;
 }
 
+.gamepad-row {
+    margin-top: 4px;
+    font-size: 11px;
+    opacity: 0.45;
+}
+
 kbd {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 36px;
-    height: 32px;
-    padding: 0 8px;
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    border-radius: 7px;
-    font-family: 'Outfit', sans-serif;
-    font-size: 13px;
+    min-width: 34px;
+    height: 30px;
+    padding: 0 7px;
+    background: rgba(0, 255, 255, 0.06);
+    border: 1px solid rgba(0, 255, 255, 0.2);
+    border-radius: 5px;
+    font-family: 'Orbitron', monospace;
+    font-size: 11px;
     font-weight: 600;
-    color: #fff;
-    transition: background 0.2s;
+    color: rgba(0, 255, 255, 0.7);
+    transition: background 0.2s, border-color 0.2s;
 }
 
 #start-btn, #restart-btn {
-    margin-top: 44px;
-    padding: 15px 52px;
-    font-family: 'Outfit', sans-serif;
-    font-size: 17px;
+    margin-top: 40px;
+    padding: 14px 48px;
+    font-family: 'Orbitron', monospace;
+    font-size: 15px;
     font-weight: 700;
     letter-spacing: 5px;
     text-transform: uppercase;
     color: #fff;
-    background: linear-gradient(135deg, #e63946 0%, #c1121f 100%);
-    border: none;
-    border-radius: 60px;
+    background: transparent;
+    border: 2px solid rgba(0, 255, 255, 0.5);
+    border-radius: 4px;
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    box-shadow: 0 6px 24px rgba(230, 57, 70, 0.35),
-                inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.15),
+                inset 0 0 15px rgba(0, 255, 255, 0.05);
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
 }
 
 #start-btn:hover, #restart-btn:hover {
-    transform: translateY(-3px) scale(1.03);
-    box-shadow: 0 10px 36px rgba(230, 57, 70, 0.5),
-                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    background: rgba(0, 255, 255, 0.08);
+    border-color: rgba(0, 255, 255, 0.8);
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.3),
+                inset 0 0 20px rgba(0, 255, 255, 0.08);
+    transform: translateY(-2px);
 }
 
 #start-btn:active, #restart-btn:active {
-    transform: translateY(0) scale(0.98);
+    transform: translateY(0);
+    background: rgba(0, 255, 255, 0.12);
 }
 
 /* ===== GAME OVER ===== */
@@ -248,7 +386,7 @@ kbd {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: radial-gradient(ellipse at 50% 40%, rgba(60, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.95) 100%);
+    background: radial-gradient(ellipse at 50% 40%, rgba(60, 0, 20, 0.85) 0%, rgba(0, 0, 0, 0.95) 100%);
     z-index: 100;
     animation: fadeIn 0.4s ease;
 }
@@ -267,24 +405,26 @@ kbd {
 }
 
 .gameover-content h1 {
-    font-size: clamp(40px, 10vw, 76px);
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(32px, 9vw, 64px);
     font-weight: 900;
-    letter-spacing: 6px;
-    color: #ff4444;
-    text-shadow: 0 0 40px rgba(255, 68, 68, 0.4);
+    letter-spacing: 5px;
+    color: #ff2244;
+    text-shadow: 0 0 30px rgba(255, 34, 68, 0.5);
 }
 
 #final-score, #final-speed {
-    font-size: 20px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 16px;
     font-weight: 400;
     margin-top: 10px;
-    opacity: 0.75;
+    opacity: 0.7;
 }
 
-/* ===== MOBILE TOUCH CONTROLS ===== */
+/* ===== MOBILE TOUCH CONTROLS (Cyberpunk) ===== */
 #mobile-controls {
     position: fixed;
-    bottom: 24px;
+    bottom: 100px;
     left: 0;
     right: 0;
     display: flex;
@@ -301,15 +441,16 @@ kbd {
 }
 
 .mobile-btn {
-    width: 72px;
-    height: 72px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.10);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 2px solid rgba(255, 255, 255, 0.16);
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 24px;
+    width: 70px;
+    height: 70px;
+    border-radius: 6px;
+    background: rgba(0, 255, 255, 0.06);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(0, 255, 255, 0.2);
+    color: rgba(0, 255, 255, 0.7);
+    font-family: 'Orbitron', monospace;
+    font-size: 22px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -318,41 +459,46 @@ kbd {
     user-select: none;
     -webkit-user-select: none;
     cursor: pointer;
-    transition: background 0.12s, border-color 0.12s, transform 0.1s;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    transition: background 0.12s, border-color 0.12s, transform 0.1s, box-shadow 0.12s;
+    box-shadow: 0 0 8px rgba(0, 255, 255, 0.08);
 }
 
 .mobile-btn:active,
 .mobile-btn.active {
-    background: rgba(255, 255, 255, 0.25);
-    border-color: rgba(255, 255, 255, 0.4);
-    transform: scale(0.93);
+    background: rgba(0, 255, 255, 0.15);
+    border-color: rgba(0, 255, 255, 0.5);
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+    transform: scale(0.94);
 }
 
 .mobile-btn span {
-    font-size: 9px;
-    font-weight: 700;
+    font-size: 8px;
+    font-weight: 600;
     letter-spacing: 1.5px;
-    margin-top: 1px;
-    opacity: 0.7;
+    margin-top: 2px;
+    opacity: 0.6;
 }
 
 .gas-btn {
-    background: rgba(76, 175, 80, 0.18);
-    border-color: rgba(76, 175, 80, 0.35);
+    background: rgba(0, 255, 100, 0.06);
+    border-color: rgba(0, 255, 100, 0.25);
+    color: rgba(0, 255, 100, 0.7);
 }
 .gas-btn:active, .gas-btn.active {
-    background: rgba(76, 175, 80, 0.4);
-    border-color: rgba(76, 175, 80, 0.6);
+    background: rgba(0, 255, 100, 0.15);
+    border-color: rgba(0, 255, 100, 0.5);
+    box-shadow: 0 0 20px rgba(0, 255, 100, 0.2);
 }
 
 .brake-btn {
-    background: rgba(244, 67, 54, 0.18);
-    border-color: rgba(244, 67, 54, 0.35);
+    background: rgba(255, 50, 50, 0.06);
+    border-color: rgba(255, 50, 50, 0.25);
+    color: rgba(255, 50, 50, 0.7);
 }
 .brake-btn:active, .brake-btn.active {
-    background: rgba(244, 67, 54, 0.4);
-    border-color: rgba(244, 67, 54, 0.6);
+    background: rgba(255, 50, 50, 0.15);
+    border-color: rgba(255, 50, 50, 0.5);
+    box-shadow: 0 0 20px rgba(255, 50, 50, 0.2);
 }
 
 /* ===== Minimap ===== */
@@ -366,23 +512,30 @@ kbd {
 }
 
 /* ===== Responsive ===== */
-@media (max-width: 600px) {
-    #hud { gap: 8px; bottom: 110px; }
-    #hud > div { padding: 8px 12px; border-radius: 12px; min-width: 64px; }
+@media (max-width: 768px) {
+    .hud-dashboard { gap: 1px; padding: 4px 4px 8px; }
+    .hud-panel { min-width: 80px; padding: 4px 6px 6px; }
+    .hud-panel-main { min-width: 100px; }
     #speed-value { font-size: 32px; }
-    #score-value { font-size: 16px; }
-    #time-label { font-size: 11px; }
-    #time-icon { font-size: 16px; }
-    .controls-info { margin-top: 28px; gap: 6px; }
-    .key-row { font-size: 12px; }
-    kbd { min-width: 28px; height: 26px; font-size: 11px; }
-    .mobile-btn { width: 64px; height: 64px; font-size: 20px; }
+    #gear-display { font-size: 22px; }
+    .panel-header { font-size: 6px; letter-spacing: 1px; }
+    .vital-label, .nav-label { font-size: 6px; }
+    .vital-value, #score-value, #odo-value { font-size: 8px; }
+    .nav-clock, #time-label { font-size: 10px; }
+    #rpm-value { font-size: 10px; }
+    .rpm-unit { font-size: 6px; }
+    #speed-unit { font-size: 8px; }
     .minimap { bottom: 130px; right: 8px; width: 120px; height: 120px; }
 }
 
-@media (max-width: 380px) {
-    .mobile-btn { width: 56px; height: 56px; font-size: 18px; }
+@media (max-width: 480px) {
+    .hud-dashboard { flex-wrap: wrap; max-width: 300px; }
+    .hud-panel { min-width: 60px; flex: 1 1 45%; }
+    .hud-panel-main { flex: 1 1 45%; }
+    #speed-value { font-size: 28px; }
+    #gear-display { font-size: 18px; }
+    .mobile-btn { width: 58px; height: 58px; font-size: 18px; }
     .mobile-side { gap: 10px; }
-    #mobile-controls { padding: 0 12px; }
-    .minimap { bottom: 120px; right: 4px; width: 100px; height: 100px; }
+    #mobile-controls { padding: 0 12px; bottom: 90px; }
+    .minimap { bottom: 110px; right: 4px; width: 100px; height: 100px; }
 }

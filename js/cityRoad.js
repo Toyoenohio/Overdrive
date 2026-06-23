@@ -2,12 +2,12 @@ import * as THREE from 'three';
 import { cityCurve, ROAD_WIDTH, SHOULDER_WIDTH } from './cityMap.js';
 
 /**
- * CityRoad — builds a road mesh that follows the cityCurve spline.
- * Uses ExtrudeGeometry to create a ribbon along the curve.
+ * CityRoad — cyberpunk road: dark asphalt, neon markings, light poles.
  */
 
-const SEGMENTS = 200; // resolution along the curve
+const SEGMENTS = 200;
 const TERRAIN_WIDTH = 80;
+const POLE_SPACING = 25;   // one pole every 25 meters
 
 export class CityRoad {
     constructor(scene) {
@@ -17,34 +17,55 @@ export class CityRoad {
         this._buildRoad();
         this._buildTerrain();
         this._buildMarkings();
+        this._buildLightPoles();
     }
 
     _initMaterials() {
+        // Dark cyberpunk asphalt
         this.roadMat = new THREE.MeshStandardMaterial({
-            color: 0x333333, flatShading: true,
-            roughness: 0.95, metalness: 0.05,
+            color: 0x1a1a22, flatShading: true,
+            roughness: 0.92, metalness: 0.08,
         });
         this.shoulderMat = new THREE.MeshStandardMaterial({
-            color: 0x4a4a4a, flatShading: true, roughness: 0.9,
+            color: 0x2a2a3a, flatShading: true, roughness: 0.9,
         });
         this.barrierMat = new THREE.MeshStandardMaterial({
-            color: 0x888888, flatShading: true, roughness: 0.85,
+            color: 0x444455, flatShading: true, roughness: 0.7, metalness: 0.3,
         });
+        // Cyan edge markings with glow
         this.markingMat = new THREE.MeshStandardMaterial({
-            color: 0xffffff, flatShading: true,
-            emissive: 0xffffff, emissiveIntensity: 0.08,
+            color: 0x00cccc, flatShading: true,
+            emissive: 0x00aaaa, emissiveIntensity: 0.5,
         });
+        // Yellow neon center line
         this.markingYellow = new THREE.MeshStandardMaterial({
             color: 0xffcc00, flatShading: true,
+            emissive: 0xffaa00, emissiveIntensity: 0.6,
         });
+        // Dark terrain
         this.terrainMat = new THREE.MeshStandardMaterial({
-            color: 0x4a7c59, flatShading: true, roughness: 0.95,
+            color: 0x0a0f1a, flatShading: true, roughness: 0.95,
         });
+
+        // Light pole materials
+        this.poleMat = new THREE.MeshStandardMaterial({
+            color: 0x444455, flatShading: true, metalness: 0.7, roughness: 0.3,
+        });
+        this.fixtureMat = new THREE.MeshStandardMaterial({
+            color: 0xffaa44,
+            emissive: 0xffaa22,
+            emissiveIntensity: 1.5,
+            flatShading: true,
+        });
+
+        // Shared pole geometries
+        this.poleGeo     = new THREE.CylinderGeometry(0.06, 0.09, 7, 6);
+        this.poleArmGeo  = new THREE.BoxGeometry(1.8, 0.06, 0.06);
+        this.fixtureGeo  = new THREE.SphereGeometry(0.28, 6, 4);
     }
 
     /**
-     * Build road as a ribbon extruded along the curve.
-     * Uses a simple approach: sample points, build quads.
+     * Build road ribbon along the curve.
      */
     _buildRoad() {
         const roadGroup = new THREE.Group();
@@ -52,16 +73,12 @@ export class CityRoad {
         const halfSW = halfW + SHOULDER_WIDTH;
         const halfTW = TERRAIN_WIDTH / 2;
 
-        // Sample curve
         const points = cityCurve.getPoints(SEGMENTS);
         const tangents = [];
         for (let i = 0; i <= SEGMENTS; i++) {
-            const t = i / SEGMENTS;
-            tangents.push(cityCurve.getTangentAt(t).normalize());
+            tangents.push(cityCurve.getTangentAt(i / SEGMENTS).normalize());
         }
 
-        // Generate road mesh using a custom geometry approach:
-        // Build a flat ribbon with quads between consecutive points
         for (let layer = 0; layer < 3; layer++) {
             const width = layer === 0 ? halfW : layer === 1 ? halfSW : halfTW;
             const mat = layer === 0 ? this.roadMat : layer === 1 ? this.shoulderMat : this.terrainMat;
@@ -74,7 +91,6 @@ export class CityRoad {
             for (let i = 0; i < points.length; i++) {
                 const pt = points[i];
                 const tan = tangents[i];
-                // Perpendicular (right vector in XZ plane)
                 const perp = new THREE.Vector3(-tan.z, 0, tan.x).normalize();
 
                 const left = pt.clone().addScaledVector(perp, -width);
@@ -90,11 +106,8 @@ export class CityRoad {
 
             for (let i = 0; i < points.length - 1; i++) {
                 const a = i * 2;
-                const b = a + 1;
-                const c = a + 2;
-                const d = a + 3;
-                indices.push(a, b, d);
-                indices.push(a, d, c);
+                indices.push(a, a + 1, a + 3);
+                indices.push(a, a + 3, a + 2);
             }
 
             const geo = new THREE.BufferGeometry();
@@ -108,32 +121,28 @@ export class CityRoad {
             roadGroup.add(mesh);
         }
 
-        // Barriers along edges
+        // Barriers with slight neon accent on top edge
         const barrierH = 1.2;
         const barrierW = 0.3;
-        const barrierStep = 2; // one barrier segment every 2 sample points (smoother)
+        const barrierStep = 2;
 
         for (const side of [-1, 1]) {
             for (let i = 0; i < points.length - barrierStep; i += barrierStep) {
                 const pt = points[i];
                 const next = points[Math.min(i + barrierStep, points.length - 1)];
-
-                // Direction from pt to next (in XZ plane)
                 const dir = new THREE.Vector3(next.x - pt.x, 0, next.z - pt.z).normalize();
-                // Perpendicular: right vector in XZ
                 const perp = new THREE.Vector3(-dir.z, 0, dir.x);
-
                 const mid = pt.clone().add(next).multiplyScalar(0.5);
                 mid.addScaledVector(perp, side * (halfSW - 0.3));
 
                 const len = pt.distanceTo(next);
-                const barGeo = new THREE.BoxGeometry(barrierW, barrierH, len);
-                const bar = new THREE.Mesh(barGeo, this.barrierMat);
+                const bar = new THREE.Mesh(
+                    new THREE.BoxGeometry(barrierW, barrierH, len),
+                    this.barrierMat
+                );
                 bar.position.copy(mid);
                 bar.position.y = barrierH / 2;
-                // Align barrier along the segment direction
-                const angle = Math.atan2(dir.x, dir.z);
-                bar.rotation.y = angle;
+                bar.rotation.y = Math.atan2(dir.x, dir.z);
                 bar.castShadow = true;
                 bar.receiveShadow = true;
                 roadGroup.add(bar);
@@ -145,32 +154,51 @@ export class CityRoad {
     }
 
     /**
-     * Build center line marking (yellow dashed).
+     * Center line + edge markings.
      */
     _buildMarkings() {
         const markGroup = new THREE.Group();
         const points = cityCurve.getPoints(SEGMENTS);
+        const halfW = ROAD_WIDTH / 2;
         const dashLen = 3;
         const gapLen = 4;
         const totalLen = dashLen + gapLen;
 
         let accumulated = 0;
-        for (let i = 0; i < points.length - 1 && accumulated < cityCurve.getLength(); i++) {
+        for (let i = 0; i < points.length - 1; i++) {
             const t = i / SEGMENTS;
             const tan = cityCurve.getTangentAt(t).normalize();
             const pt = points[i];
+            const perp = new THREE.Vector3(-tan.z, 0, tan.x);
 
             accumulated += pt.distanceTo(points[i + 1]);
 
             // Dashed yellow center line
             const mod = accumulated % totalLen;
             if (mod < dashLen) {
-                const markGeo = new THREE.PlaneGeometry(0.12, 0.8);
-                const mark = new THREE.Mesh(markGeo, this.markingYellow);
-                mark.rotation.x = -Math.PI / 2;
-                mark.position.copy(pt);
-                mark.position.y = 0.02;
-                markGroup.add(mark);
+                const m = new THREE.Mesh(
+                    new THREE.PlaneGeometry(0.12, 0.8),
+                    this.markingYellow
+                );
+                m.rotation.x = -Math.PI / 2;
+                m.position.copy(pt);
+                m.position.y = 0.025;
+                markGroup.add(m);
+            }
+
+            // Edge lines (cyan glow) every 3rd segment point
+            if (i % 3 === 0) {
+                for (const s of [-1, 1]) {
+                    const edgePt = pt.clone().addScaledVector(perp, s * (halfW - 0.2));
+                    const e = new THREE.Mesh(
+                        new THREE.PlaneGeometry(0.12, 1.2),
+                        this.markingMat
+                    );
+                    e.rotation.x = -Math.PI / 2;
+                    e.position.copy(edgePt);
+                    e.position.y = 0.025;
+                    markGroup.add(e);
+                }
             }
         }
 
@@ -178,23 +206,68 @@ export class CityRoad {
     }
 
     /**
-     * Build terrain panels on both sides of the road.
-     * We use large planes placed under/around the road curve.
+     * Ground plane.
      */
     _buildTerrain() {
-        // Simple approach: a large ground plane that covers the whole area
         const bounds = this._getBounds();
-        const sizeX = bounds.maxX - bounds.minX + 40;
-        const sizeZ = bounds.maxZ - bounds.minZ + 40;
+        const sizeX = bounds.maxX - bounds.minX + 60;
+        const sizeZ = bounds.maxZ - bounds.minZ + 60;
         const centerX = (bounds.maxX + bounds.minX) / 2;
         const centerZ = (bounds.maxZ + bounds.minZ) / 2;
 
-        const groundGeo = new THREE.PlaneGeometry(sizeX, sizeZ);
-        const ground = new THREE.Mesh(groundGeo, this.terrainMat);
+        const ground = new THREE.Mesh(
+            new THREE.PlaneGeometry(sizeX, sizeZ),
+            this.terrainMat
+        );
         ground.rotation.x = -Math.PI / 2;
         ground.position.set(centerX, -0.15, centerZ);
         ground.receiveShadow = true;
         this.scene.add(ground);
+    }
+
+    /**
+     * Street light poles along the curve.
+     */
+    _buildLightPoles() {
+        const poleGroup = new THREE.Group();
+        const totalLen = cityCurve.getLength();
+        const numPoles = Math.floor(totalLen / POLE_SPACING);
+        const halfSW = ROAD_WIDTH / 2 + SHOULDER_WIDTH;
+
+        for (let i = 0; i < numPoles; i++) {
+            const t = Math.min((i * POLE_SPACING) / totalLen, 0.999);
+            const pt = cityCurve.getPointAt(t);
+            const tan = cityCurve.getTangentAt(t).normalize();
+            const perp = new THREE.Vector3(-tan.z, 0, tan.x);
+
+            for (const side of [-1, 1]) {
+                const pos = pt.clone().addScaledVector(perp, side * (halfSW - 0.5));
+                const armDir = -side;    // arm extends toward road
+
+                const g = new THREE.Group();
+
+                // Vertical pole
+                const pole = new THREE.Mesh(this.poleGeo, this.poleMat);
+                pole.position.y = 3.5;
+                pole.castShadow = true;
+                g.add(pole);
+
+                // Horizontal arm
+                const arm = new THREE.Mesh(this.poleArmGeo, this.poleMat);
+                arm.position.set(armDir * 0.9, 6.9, 0);
+                g.add(arm);
+
+                // Light fixture (warm glow sphere)
+                const fixture = new THREE.Mesh(this.fixtureGeo, this.fixtureMat);
+                fixture.position.set(armDir * 1.8, 6.75, 0);
+                g.add(fixture);
+
+                g.position.copy(pos);
+                poleGroup.add(g);
+            }
+        }
+
+        this.scene.add(poleGroup);
     }
 
     _getBounds() {
@@ -209,30 +282,23 @@ export class CityRoad {
         return { minX, maxX, minZ, maxZ };
     }
 
-    /** Get the closest point on the road to a given position. */
     getClosestPoint(pos) {
         let bestDist = Infinity;
         let bestT = 0;
-        // Dense sampling: 500 steps over 4626 units = ~9 units between samples
         const steps = 500;
         for (let i = 0; i <= steps; i++) {
             const t = i / steps;
             const pt = cityCurve.getPointAt(t);
             const dist = pos.distanceToSquared(pt);
-            if (dist < bestDist) {
-                bestDist = dist;
-                bestT = t;
-            }
+            if (dist < bestDist) { bestDist = dist; bestT = t; }
         }
-        // Refine with a local binary search around bestT
         let lo = Math.max(0, bestT - 0.01);
         let hi = Math.min(1, bestT + 0.01);
-        for (let refine = 0; refine < 8; refine++) {
+        for (let r = 0; r < 8; r++) {
             const t1 = lo + (hi - lo) / 3;
             const t2 = hi - (hi - lo) / 3;
-            const d1 = pos.distanceToSquared(cityCurve.getPointAt(t1));
-            const d2 = pos.distanceToSquared(cityCurve.getPointAt(t2));
-            if (d1 < d2) hi = t2;
+            if (pos.distanceToSquared(cityCurve.getPointAt(t1)) <
+                pos.distanceToSquared(cityCurve.getPointAt(t2))) hi = t2;
             else lo = t1;
         }
         const finalT = (lo + hi) / 2;
@@ -243,18 +309,11 @@ export class CityRoad {
         };
     }
 
-    /** Check if a position is on the road (within ROAD_WIDTH/2 + margin). */
     isOnRoad(pos, margin = 8) {
         const info = this.getClosestPoint(pos);
-        const dist = pos.distanceTo(info.point);
-        return dist < (ROAD_WIDTH / 2 + margin);
+        return pos.distanceTo(info.point) < (ROAD_WIDTH / 2 + margin);
     }
 
-    reset() {
-        // City road is static — nothing to reset
-    }
-
-    update(carZ, dt, dayFactor) {
-        // No chunk management needed — static road
-    }
+    reset() {}
+    update(carZ, dt, dayFactor) {}
 }

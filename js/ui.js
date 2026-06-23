@@ -1,12 +1,14 @@
 /**
- * UI — manages all DOM-based interface elements (HUD, screens).
+ * UI — cyberpunk HUD management.
  */
 export class UI {
     constructor() {
         this.speedValue  = document.getElementById('speed-value');
         this.scoreValue  = document.getElementById('score-value');
-        this.timeIcon    = document.getElementById('time-icon');
+        this.rpmValue    = document.getElementById('rpm-value');
+        this.gearDisplay = document.getElementById('gear-display');
         this.timeLabel   = document.getElementById('time-label');
+        this.odoValue    = document.getElementById('odo-value');
         this.hud         = document.getElementById('hud');
 
         this.startScreen   = document.getElementById('start-screen');
@@ -16,29 +18,56 @@ export class UI {
 
         this.startBtn   = document.getElementById('start-btn');
         this.restartBtn = document.getElementById('restart-btn');
+
+        this._totalDistance = 0;
+        this._updateClock();
+        this._clockInterval = setInterval(() => this._updateClock(), 1000);
     }
 
     /* ---------- HUD updates ---------- */
 
     updateSpeed(speed) {
         this.speedValue.textContent = Math.round(speed);
-    }
 
-    updateScore(distanceMeters) {
-        if (distanceMeters >= 1000) {
-            this.scoreValue.textContent = (distanceMeters / 1000).toFixed(1) + ' km';
+        // Gear indicator based on speed
+        if (speed < 1) {
+            this.gearDisplay.textContent = 'P';
+        } else if (speed < 0) {
+            this.gearDisplay.textContent = 'R';
         } else {
-            this.scoreValue.textContent = Math.round(distanceMeters) + ' m';
+            this.gearDisplay.textContent = 'D';
         }
     }
 
-    updateTimeOfDay(dayFactor) {
-        if (dayFactor > 0.5) {
-            this.timeIcon.textContent  = '☀️';
-            this.timeLabel.textContent = 'DÍA';
+    updateScore(distanceMeters) {
+        this._totalDistance = distanceMeters;
+
+        if (distanceMeters >= 1000) {
+            this.scoreValue.textContent = (distanceMeters / 1000).toFixed(1) + ' KM';
         } else {
-            this.timeIcon.textContent  = '🌙';
-            this.timeLabel.textContent = 'NOCHE';
+            this.scoreValue.textContent = Math.round(distanceMeters) + ' M';
+        }
+
+        // Odometer
+        if (this.odoValue) {
+            this.odoValue.textContent = String(Math.round(distanceMeters)).padStart(5, '0') + ' M';
+        }
+    }
+
+    updateRPM(speed) {
+        // Simulated RPM based on speed
+        const rpm = Math.min(Math.abs(speed) / 160 * 7, 7).toFixed(1);
+        if (this.rpmValue) {
+            this.rpmValue.textContent = rpm;
+        }
+    }
+
+    _updateClock() {
+        const now = new Date();
+        const h = String(now.getHours()).padStart(2, '0');
+        const m = String(now.getMinutes()).padStart(2, '0');
+        if (this.timeLabel) {
+            this.timeLabel.textContent = `${h}:${m}`;
         }
     }
 

@@ -3,59 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <meta name="description" content="Overdrive — Recorre las calles de Lechería en 3D con estética low-poly">
-    <title>Overdrive — Lechería</title>
+    <meta name="description" content="Overdrive — Recorre Lechería de noche en estilo cyberpunk low-poly">
+    <title>Overdrive — Lechería Cyberpunk</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="game-container">
         <canvas id="game-canvas"></canvas>
 
-        <!-- HUD -->
+        <!-- ========== CYBERPUNK HUD ========== -->
         <div id="hud" class="hidden">
-            <div id="speed-display">
-                <span id="speed-value">0</span>
-                <span id="speed-unit">km/h</span>
-            </div>
-            <div id="score-display">
-                <span id="score-label">DISTANCIA</span>
-                <span id="score-value">0 m</span>
-            </div>
-            <div id="time-display">
-                <span id="time-icon">☀️</span>
-                <span id="time-label">DÍA</span>
+            <div class="hud-dashboard">
+                <!-- Panel 1: Vehicle Vitals -->
+                <div class="hud-panel">
+                    <div class="panel-header">VEHICLE VITALS</div>
+                    <div class="panel-body">
+                        <div class="vital-row">
+                            <span class="vital-label">ENGINE TEMP</span>
+                            <div class="vital-bar-track"><div class="vital-bar-fill" style="width:72%"></div></div>
+                        </div>
+                        <div class="vital-row">
+                            <span class="vital-label">OIL PRESS.</span>
+                            <div class="vital-bar-track"><div class="vital-bar-fill" style="width:88%"></div></div>
+                        </div>
+                        <div class="vital-divider"></div>
+                        <div class="vital-row">
+                            <span class="vital-label">VOLTAGE</span>
+                            <span class="vital-value">14.1 V</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel 2: Tachometer -->
+                <div class="hud-panel">
+                    <div class="panel-header">TACHOMETER</div>
+                    <div class="panel-body tacho-body">
+                        <span id="gear-display">D</span>
+                        <div class="rpm-area">
+                            <span id="rpm-value">0</span>
+                            <span class="rpm-unit">×1000 RPM</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel 3: Speedometer (main) -->
+                <div class="hud-panel hud-panel-main">
+                    <div class="panel-header">SPEEDOMETER</div>
+                    <div class="panel-body speed-body">
+                        <span id="speed-value">0</span>
+                        <span id="speed-unit">KM/H</span>
+                    </div>
+                </div>
+
+                <!-- Panel 4: Navigation -->
+                <div class="hud-panel">
+                    <div class="panel-header">NAVIGATION &amp; STATUS</div>
+                    <div class="panel-body nav-body">
+                        <div class="nav-row">
+                            <span class="nav-label">TRIP A:</span>
+                            <span id="score-value">0.0 M</span>
+                        </div>
+                        <div class="nav-row">
+                            <span class="nav-label">ODO:</span>
+                            <span id="odo-value">00000 M</span>
+                        </div>
+                        <div class="vital-divider"></div>
+                        <div class="nav-row">
+                            <span id="time-label" class="nav-clock">22:07</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Start Screen -->
+        <!-- ========== START SCREEN ========== -->
         <div id="start-screen">
             <div class="start-content">
                 <h1>OVERDRIVE</h1>
-                <p class="subtitle">Lechería</p>
+                <p class="subtitle">Lechería · Cyberpunk</p>
                 <div class="controls-info">
                     <div class="key-row"><kbd>W</kbd> <kbd>↑</kbd> <span>Acelerar</span></div>
                     <div class="key-row"><kbd>S</kbd> <kbd>↓</kbd> <span>Frenar / Reversa</span></div>
                     <div class="key-row"><kbd>A</kbd> <kbd>←</kbd> <span>Izquierda</span></div>
                     <div class="key-row"><kbd>D</kbd> <kbd>→</kbd> <span>Derecha</span></div>
                     <div class="key-row"><kbd>SPACE</kbd> <span>Freno de mano</span></div>
-                    <div class="key-row gamepad-row"><span>🎮</span> <span>Gamepad compatible — RT acelerar, LT frenar, stick izq. girar</span></div>
+                    <div class="key-row gamepad-row"><span>🎮</span> <span>Gamepad compatible</span></div>
                 </div>
                 <button id="start-btn">INICIAR</button>
             </div>
         </div>
 
-        <!-- Game Over Screen -->
+        <!-- ========== GAME OVER ========== -->
         <div id="gameover-screen" class="hidden">
             <div class="gameover-content">
-                <h1>💥 CHOQUE</h1>
+                <h1>⚡ FUERA DE RUTA</h1>
                 <p id="final-score">Distancia: 0 m</p>
                 <p id="final-speed">Velocidad: 0 km/h</p>
                 <button id="restart-btn">REINTENTAR</button>
             </div>
         </div>
 
-        <!-- Mobile Touch Controls (hidden by default, shown on touch devices via JS) -->
+        <!-- ========== MOBILE CONTROLS ========== -->
         <div id="mobile-controls" class="hidden">
             <div class="mobile-side mobile-left-side">
                 <button id="btn-steer-left" class="mobile-btn">◀</button>
