@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="description" content="Viaje — Juego de conducción 3D en autopista infinita con estética low-poly">
+    <title>Viaje — Autopista Infinita</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+
+        <!-- HUD -->
+        <div id="hud" class="hidden">
+            <div id="speed-display">
+                <span id="speed-value">0</span>
+                <span id="speed-unit">km/h</span>
+            </div>
+            <div id="score-display">
+                <span id="score-label">DISTANCIA</span>
+                <span id="score-value">0 m</span>
+            </div>
+            <div id="time-display">
+                <span id="time-icon">☀️</span>
+                <span id="time-label">DÍA</span>
+            </div>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="start-screen">
+            <div class="start-content">
+                <h1>VIAJE</h1>
+                <p class="subtitle">Autopista Infinita</p>
+                <div class="controls-info">
+                    <div class="key-row"><kbd>W</kbd> <kbd>↑</kbd> <span>Acelerar</span></div>
+                    <div class="key-row"><kbd>S</kbd> <kbd>↓</kbd> <span>Frenar</span></div>
+                    <div class="key-row"><kbd>A</kbd> <kbd>←</kbd> <span>Izquierda</span></div>
+                    <div class="key-row"><kbd>D</kbd> <kbd>→</kbd> <span>Derecha</span></div>
+                    <div class="key-row"><kbd>SPACE</kbd> <span>Freno de mano</span></div>
+                </div>
+                <button id="start-btn">INICIAR</button>
+            </div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameover-screen" class="hidden">
+            <div class="gameover-content">
+                <h1>💥 CHOQUE</h1>
+                <p id="final-score">Distancia: 0 m</p>
+                <p id="final-speed">Velocidad: 0 km/h</p>
+                <button id="restart-btn">REINTENTAR</button>
+            </div>
+        </div>
+
+        <!-- Mobile Touch Controls (hidden by default, shown on touch devices via JS) -->
+        <div id="mobile-controls" class="hidden">
+            <div class="mobile-side mobile-left-side">
+                <button id="btn-steer-left" class="mobile-btn">◀</button>
+                <button id="btn-steer-right" class="mobile-btn">▶</button>
+            </div>
+            <div class="mobile-side mobile-right-side">
+                <button id="btn-gas" class="mobile-btn gas-btn">▲<span>GAS</span></button>
+                <button id="btn-brake" class="mobile-btn brake-btn">▼<span>FRENO</span></button>
+            </div>
+        </div>
+    </div>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+        }
+    }
+    </script>
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
