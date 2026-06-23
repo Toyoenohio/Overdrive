@@ -3,33 +3,40 @@ import * as THREE from 'three';
 /**
  * cityMap — Lechería road network.
  *
- * Waypoints: Crucero de Lechería → Av. Bolívar
- * Coordinates in (lat, lng) — converted to local 3D space
- * with origin at the crucero.
+ * Route: Crucero de Lechería → Av. Bolívar (2.3 km real)
+ * Shape: "J" — diagonal NW from crucero, right turn near
+ *        C.C. Aventura Plaza, then straight north to Av. Bolívar.
+ *
+ * Coordinates traced from Google Maps route image provided by user.
  */
 
-// Real waypoints following Av. Principal / Diego Bautista Urbaneja
-// Exaggerated slightly for a more fun driving curve
 const RAW_WAYPOINTS = [
     // lat,      lng           description
-    [ 10.18820, -64.69820 ], // Crucero de Lechería (entrada)
-    [ 10.18830, -64.69780 ], // entrando a la avenida
-    [ 10.18845, -64.69720 ], // inicio recta
-    [ 10.18855, -64.69670 ], // pasando cc
-    [ 10.18875, -64.69620 ], // primera curva (izquierda hacia la costa)
-    [ 10.18900, -64.69580 ], // bordeando la bahía
-    [ 10.18925, -64.69540 ], // curva derecha suave
-    [ 10.18945, -64.69500 ], // recta costera
-    [ 10.18960, -64.69450 ], // aproximándose al centro
-    [ 10.18970, -64.69400 ], // curva izquierda hacia av bolívar
-    [ 10.18985, -64.69360 ], // recta final
-    [ 10.19000, -64.69330 ], // intersección Av. Bolívar
+    [ 10.1823,  -64.6598  ], // 00 — Crucero de Lechería (McDonald's / Av. Intercomunal)
+    [ 10.1828,  -64.6608  ], // 01 — entrando a la diagonal NW
+    [ 10.1835,  -64.6620  ], // 02 — pasando CC Plaza Mayor
+    [ 10.1842,  -64.6632  ], // 03 — diagonal NW
+    [ 10.1850,  -64.6642  ], // 04 — cruza Av. A / Calle Marino
+    [ 10.1860,  -64.6650  ], // 05 — zona El Verdader Sabor Zuliano
+    [ 10.1870,  -64.6655  ], // 06 — aproximándose a C.C. Aventura Plaza
+    [ 10.1880,  -64.6658  ], // 07 — C.C. Aventura Plaza (inicio de curva derecha)
+    [ 10.1888,  -64.6655  ], // 08 — curva derecha (diagonal → norte)
+    [ 10.1895,  -64.6650  ], // 09 — final de curva, alineando al norte
+    [ 10.1900,  -64.6648  ], // 10 — recta norte, cruza Calle El Dorado
+    [ 10.1910,  -64.6645  ], // 11 — recta norte
+    [ 10.1920,  -64.6642  ], // 12 — La Bodeguilla Bodegón
+    [ 10.1930,  -64.6640  ], // 13 — cruza Calle Sábalo
+    [ 10.1940,  -64.6638  ], // 14 — Restaurant Bella China Lechería
+    [ 10.1950,  -64.6635  ], // 15 — recta norte, cruza Calle Neverí
+    [ 10.1958,  -64.6632  ], // 16 — cruza Av. Tamanaco
+    [ 10.1965,  -64.6630  ], // 17 — Unidad Educativa J.J. Garmendia
+    [ 10.1970,  -64.6628  ], // 18 — intersección Av. Bolívar / Av. Daniel Camejo Octavio
 ];
 
-// Conversion factors for Lechería (~10.188° N)
+// Conversion factors for Lechería (~10.19° N)
 const LAT_TO_M = 111_320;                     // meters per degree latitude
-const LNG_TO_M = 111_320 * Math.cos(10.188 * Math.PI / 180); // ~109,580 m/deg
-const SCALE = 8.0;                            // game units per real meter (stretch for fun)
+const LNG_TO_M = 111_320 * Math.cos(10.19 * Math.PI / 180); // ~109,590 m/deg
+const SCALE = 3.5;                            // game units per real meter
 
 /**
  * Convert (lat, lng) → game 3D coords.
@@ -70,9 +77,11 @@ export function getCurvePoint(t) {
 }
 
 // Road properties
-export const ROAD_WIDTH = 28;        // game units (~3.5 real meters, 2 lanes)
+export const ROAD_WIDTH = 28;        // game units (~4 real meters per side, 2 lanes)
 export const SHOULDER_WIDTH = 5;
 export const LANE_COUNT = 2;         // one each direction
 export const LANE_WIDTH = ROAD_WIDTH / (LANE_COUNT * 2); // per half-lane
 
-console.log(`[cityMap] Road length: ${(curveLength / SCALE).toFixed(0)} real meters → ${curveLength.toFixed(0)} game units`);
+const realMeters = curveLength / SCALE;
+console.log(`[cityMap] Road length: ${realMeters.toFixed(0)} real meters → ${curveLength.toFixed(0)} game units (scale ${SCALE}x)`);
+console.log(`[cityMap] Shape: 19 waypoints, J-curve — diagonal NW → right turn → straight N`);
