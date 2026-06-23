@@ -6,6 +6,7 @@ import { Environment }  from './environment.js';
 import { GameCamera }   from './camera.js';
 import { UI }           from './ui.js';
 import { Minimap }      from './minimap.js';
+import { Buildings }    from './buildings.js';
 import { cityCurve, curveLength } from './cityMap.js';
 
 /**
@@ -39,6 +40,7 @@ class Game {
         this.environment = new Environment(this.scene);
         this.gameCamera  = new GameCamera(this.renderer);
         this.minimap     = new Minimap();
+        this.buildings   = new Buildings(this.scene);
 
         /* --- State --- */
         this.isRunning  = false;

@@ -36,7 +36,7 @@ const RAW_WAYPOINTS = [
 // Conversion factors for Lechería (~10.19° N)
 const LAT_TO_M = 111_320;                     // meters per degree latitude
 const LNG_TO_M = 111_320 * Math.cos(10.19 * Math.PI / 180); // ~109,590 m/deg
-const SCALE = 3.5;                            // game units per real meter
+const SCALE = 1.0;                            // 1 game unit = 1 real meter (road ~2300u)
 
 /**
  * Convert (lat, lng) → game 3D coords.

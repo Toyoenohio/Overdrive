@@ -11,8 +11,8 @@ export class Car {
 
         /* --- Physics --- */
         this.speed          = 0;     // km/h
-        this.maxSpeed        = 120;
-        this.acceleration    = 35;   // km/h per second
+        this.maxSpeed        = 160;
+        this.acceleration    = 45;   // km/h per second
         this.brakeForce      = 55;
         this.naturalDecel    = 20;
         this.steerSpeed      = 2.2;  // radians per second at full lock
@@ -116,23 +116,23 @@ export class Car {
     }
 
     _createHeadlightBeams() {
-        this.spotL = new THREE.SpotLight(0xffffcc, 0, 60, Math.PI / 7, 0.6, 1.2);
+        this.spotL = new THREE.SpotLight(0xffffcc, 0, 120, Math.PI / 5, 0.4, 1.0);
         this.spotL.position.set(-0.7, 0.5, 2.5);
-        this.spotL.target.position.set(-0.7, -0.5, 25);
+        this.spotL.target.position.set(-0.7, -0.5, 30);
         this.group.add(this.spotL);
         this.group.add(this.spotL.target);
 
-        this.spotR = new THREE.SpotLight(0xffffcc, 0, 60, Math.PI / 7, 0.6, 1.2);
+        this.spotR = new THREE.SpotLight(0xffffcc, 0, 120, Math.PI / 5, 0.4, 1.0);
         this.spotR.position.set(0.7, 0.5, 2.5);
-        this.spotR.target.position.set(0.7, -0.5, 25);
+        this.spotR.target.position.set(0.7, -0.5, 30);
         this.group.add(this.spotR);
         this.group.add(this.spotR.target);
     }
 
     setHeadlights(intensity) {
         const i = Math.max(0, Math.min(1, intensity));
-        this.spotL.intensity = i * 4;
-        this.spotR.intensity = i * 4;
+        this.spotL.intensity = i * 6;
+        this.spotR.intensity = i * 6;
         this.headlightMat.emissiveIntensity = 0.3 + i * 0.7;
     }
 
